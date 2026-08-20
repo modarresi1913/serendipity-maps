@@ -2,6 +2,7 @@
 
 import { motion, useInView } from 'framer-motion';
 import { useRef, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { useAppStore } from '@/store/useAppStore';
 import {
   Coffee,
@@ -17,6 +18,8 @@ import {
   Volume2,
   VolumeX,
 } from 'lucide-react';
+
+const MapCanvas = dynamic(() => import('../MapCanvas'), { ssr: false });
 
 const iconMap: Record<string, React.ComponentType<{ className?: string }>> = {
   coffee: Coffee,
@@ -47,12 +50,55 @@ const timeLabels = {
   night: { label: 'Night', range: '9 PM – 6 AM', color: '#8FB8DE' },
 };
 
+const mapCenter: [number, number] = [35.6892, 51.3890];
+
+const mapPoints = [
+  { lat: 35.6920, lng: 51.3870, label: 'Morning Coffee Ritual', color: '#D4A574', type: 'pattern' as const },
+  { lat: 35.6950, lng: 51.3920, label: 'Trail Running Start', color: '#7CB9A8', type: 'pattern' as const },
+  { lat: 35.6840, lng: 51.3850, label: 'Bookstore Browsing', color: '#B8A9C9', type: 'pattern' as const },
+  { lat: 35.6870, lng: 51.3940, label: 'Evening Park Walk', color: '#8FB8DE', type: 'pattern' as const },
+  { lat: 35.6895, lng: 51.3860, label: 'Late Night Writing', color: '#C9A9B8', type: 'pattern' as const },
+  { lat: 35.6905, lng: 51.3910, label: 'Weekend Market', color: '#DEB887', type: 'pattern' as const },
+];
+
+const mapPaths = [
+  {
+    coords: [
+      [35.6900, 51.3880],
+      [35.6910, 51.3875],
+      [35.6920, 51.3870],
+    ] as [number, number][],
+    color: '#D4A574',
+    dash: true,
+  },
+  {
+    coords: [
+      [35.6892, 51.3890],
+      [35.6920, 51.3900],
+      [35.6950, 51.3920],
+    ] as [number, number][],
+    color: '#7CB9A8',
+    dash: true,
+  },
+  {
+    coords: [
+      [35.6920, 51.3870],
+      [35.6900, 51.3860],
+      [35.6870, 51.3850],
+      [35.6840, 51.3850],
+    ] as [number, number][],
+    color: '#B8A9C9',
+    dash: true,
+  },
+];
+
 export default function BehavioralFingerprintSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
   const { patterns, patternLearned, setPatternLearned } = useAppStore();
   const [learningProgress, setLearningProgress] = useState(0);
   const [expandedPattern, setExpandedPattern] = useState<string | null>(null);
+  const [highlightedPoint, setHighlightedPoint] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isInView || patternLearned) return;
@@ -171,8 +217,30 @@ export default function BehavioralFingerprintSection() {
             </div>
           </div>
 
-          {/* Pattern cards */}
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* Map + Patterns layout */}
+          <div className="grid lg:grid-cols-[1fr_380px] gap-6">
+            {/* Map */}
+            <div className="glass rounded-2xl overflow-hidden order-2 lg:order-1">
+              <div className="p-4 border-b border-[#2A2A3A]/50">
+                <p className="text-[10px] text-muted-foreground/40 uppercase tracking-widest">Spatial Pattern Map</p>
+              </div>
+              <div className="relative h-[350px] sm:h-[420px]">
+                <MapCanvas
+                  center={mapCenter}
+                  zoom={15}
+                  points={
+                    highlightedPoint
+                      ? mapPoints.filter((p) => p.label === highlightedPoint)
+                      : mapPoints
+                  }
+                  paths={highlightedPoint ? [] : mapPaths}
+                  className="w-full h-full"
+                />
+              </div>
+            </div>
+
+            {/* Pattern cards */}
+            <div className="space-y-3 order-1 lg:order-2 max-h-[500px] overflow-y-auto pr-1">
             {patterns.map((pattern, i) => {
               const Icon = iconMap[pattern.icon] || Coffee;
               const timeInfo = timeLabels[pattern.timeOfDay];
@@ -189,6 +257,8 @@ export default function BehavioralFingerprintSection() {
                   onClick={() =>
                     setExpandedPattern(isExpanded ? null : pattern.id)
                   }
+                  onMouseEnter={() => setHighlightedPoint(pattern.label)}
+                  onMouseLeave={() => setHighlightedPoint(null)}
                   className={`glass rounded-2xl p-5 cursor-pointer transition-all duration-300 hover:border-opacity-50 ${
                     isExpanded ? 'border-[#2A2A3A]' : ''
                   }`}
@@ -280,6 +350,7 @@ export default function BehavioralFingerprintSection() {
                 </motion.div>
               );
             })}
+            </div>
           </div>
         </motion.div>
       </div>

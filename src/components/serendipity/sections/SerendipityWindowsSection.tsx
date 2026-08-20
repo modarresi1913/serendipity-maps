@@ -1,151 +1,70 @@
 'use client';
 
 import { motion, useInView } from 'framer-motion';
-import { useRef, useState, useEffect, useCallback } from 'react';
-import { MapPin, Clock, ArrowRight, Sparkles, Navigation } from 'lucide-react';
+import { useRef, useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
+import { MapPin, Clock, Sparkles, Navigation } from 'lucide-react';
 
-interface NearMissPath {
-  user1X: number;
-  user1Y: number;
-  user2X: number;
-  user2Y: number;
- gap: number;
-}
+const MapCanvas = dynamic(() => import('../MapCanvas'), { ssr: false });
+
+const mapCenter: [number, number] = [35.6892, 51.3890];
+
+const windowLocations = [
+  {
+    lat: 35.6920, lng: 51.3870,
+    user1Path: [
+      [35.6900, 51.3880],
+      [35.6910, 51.3875],
+      [35.6920, 51.3870],
+      [35.6925, 51.3865],
+    ] as [number, number][],
+    user2Path: [
+      [35.6930, 51.3860],
+      [35.6925, 51.3868],
+      [35.6920, 51.3875],
+      [35.6915, 51.3880],
+    ] as [number, number][],
+    overlapCenter: { lat: 35.6922, lng: 51.3872, radius: 80 },
+  },
+  {
+    lat: 35.6950, lng: 51.3920,
+    user1Path: [
+      [35.6930, 51.3900],
+      [35.6940, 51.3910],
+      [35.6950, 51.3920],
+      [35.6960, 51.3930],
+    ] as [number, number][],
+    user2Path: [
+      [35.6965, 51.3925],
+      [35.6955, 51.3922],
+      [35.6948, 51.3918],
+      [35.6940, 51.3910],
+    ] as [number, number][],
+    overlapCenter: { lat: 35.6952, lng: 51.3920, radius: 120 },
+  },
+  {
+    lat: 35.6840, lng: 51.3850,
+    user1Path: [
+      [35.6860, 51.3840],
+      [35.6850, 51.3845],
+      [35.6840, 51.3850],
+      [35.6830, 51.3860],
+    ] as [number, number][],
+    user2Path: [
+      [35.6835, 51.3865],
+      [35.6840, 51.3858],
+      [35.6845, 51.3850],
+      [35.6850, 51.3842],
+    ] as [number, number][],
+    overlapCenter: { lat: 35.6842, lng: 51.3855, radius: 60 },
+  },
+];
 
 export default function SerendipityWindowsSection() {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-80px' });
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const animRef = useRef<number>(0);
   const [activeWindow, setActiveWindow] = useState(0);
   const [showNudge, setShowNudge] = useState(false);
-
-  // Near-miss path animation on canvas
-  const drawNearMiss = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const dpr = window.devicePixelRatio || 1;
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = rect.width * dpr;
-    canvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-
-    const w = rect.width;
-    const h = rect.height;
-    let t = 0;
-
-    // Generate two paths that nearly intersect
-    const path1Points: { x: number; y: number }[] = [];
-    const path2Points: { x: number; y: number }[] = [];
-    const gap = 15 + Math.sin(t) * 5; // The near-miss gap
-
-    for (let i = 0; i <= 50; i++) {
-      const frac = i / 50;
-      path1Points.push({
-        x: w * 0.1 + frac * w * 0.35,
-        y: h * 0.3 + Math.sin(frac * Math.PI * 2) * h * 0.15,
-      });
-      path2Points.push({
-        x: w * 0.55 + frac * w * 0.35,
-        y: h * 0.7 - Math.sin(frac * Math.PI * 2) * h * 0.15,
-      });
-    }
-
-    const animate = () => {
-      t += 0.005;
-      ctx.clearRect(0, 0, w, h);
-
-      const currentGap = 15 + Math.sin(t) * 8;
-
-      // Draw paths
-      const drawAnimatedPath = (
-        points: { x: number; y: number }[],
-        color: string,
-        glowColor: string
-      ) => {
-        ctx.beginPath();
-        points.forEach((p, i) => {
-          if (i === 0) ctx.moveTo(p.x, p.y);
-          else ctx.lineTo(p.x, p.y);
-        });
-        ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([3, 6]);
-        ctx.lineDashOffset = -t * 20;
-        ctx.stroke();
-        ctx.setLineDash([]);
-      };
-
-      drawAnimatedPath(path1Points, 'rgba(212, 165, 116, 0.4)', 'rgba(212, 165, 116, 0.2)');
-      drawAnimatedPath(path2Points, 'rgba(124, 185, 168, 0.4)', 'rgba(124, 185, 168, 0.2)');
-
-      // Draw near-miss point (center of canvas)
-      const cx = w * 0.5;
-      const cy = h * 0.5;
-
-      // Pulsing gap indicator
-      const pulseScale = 1 + Math.sin(t * 3) * 0.2;
-      const gapRadius = currentGap * pulseScale;
-
-      // Gap zone
-      ctx.beginPath();
-      ctx.arc(cx, cy, gapRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = 'rgba(184, 169, 201, 0.3)';
-      ctx.lineWidth = 1;
-      ctx.stroke();
-
-      // "Almost" text
-      ctx.font = '11px var(--font-geist-sans)';
-      ctx.fillStyle = 'rgba(184, 169, 201, 0.6)';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${Math.round(currentGap)}m apart`, cx, cy + gapRadius + 18);
-
-      // Two dots representing the two users
-      const dot1X = cx - currentGap / 2;
-        const dot1Y = cy;
-      const dot2X = cx + currentGap / 2;
-      const dot2Y = cy;
-
-      // Glow for dots
-      const grad1 = ctx.createRadialGradient(dot1X, dot1Y, 0, dot1X, dot1Y, 12);
-      grad1.addColorStop(0, 'rgba(212, 165, 116, 0.5)');
-      grad1.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad1;
-      ctx.fillRect(dot1X - 12, dot1Y - 12, 24, 24);
-
-      const grad2 = ctx.createRadialGradient(dot2X, dot2Y, 0, dot2X, dot2Y, 12);
-      grad2.addColorStop(0, 'rgba(124, 185, 168, 0.5)');
-      grad2.addColorStop(1, 'transparent');
-      ctx.fillStyle = grad2;
-      ctx.fillRect(dot2X - 12, dot2Y - 12, 24, 24);
-
-      // Dots
-      ctx.beginPath();
-      ctx.arc(dot1X, dot1Y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#D4A574';
-      ctx.fill();
-
-      ctx.beginPath();
-      ctx.arc(dot2X, dot2Y, 3, 0, Math.PI * 2);
-      ctx.fillStyle = '#7CB9A8';
-      ctx.fill();
-
-      animRef.current = requestAnimationFrame(animate);
-    };
-
-    animate();
-    return () => cancelAnimationFrame(animRef.current);
-  }, []);
-
-  useEffect(() => {
-    if (isInView) {
-      const cleanup = drawNearMiss();
-      return cleanup;
-    }
-  }, [isInView, drawNearMiss]);
 
   const windows = [
     {
@@ -179,6 +98,21 @@ export default function SerendipityWindowsSection() {
     return () => clearTimeout(timer);
   }, [activeWindow]);
 
+  const activeLoc = windowLocations[activeWindow];
+
+  const mapPoints = [
+    { lat: activeLoc.lat, lng: activeLoc.lng, label: windows[activeWindow].location, color: '#7CB9A8', type: 'serendipity' as const, pulse: true },
+  ];
+
+  const mapPaths = [
+    { coords: activeLoc.user1Path, color: '#D4A574', dash: true },
+    { coords: activeLoc.user2Path, color: '#7CB9A8', dash: true },
+  ];
+
+  const overlapZones = [
+    { lat: activeLoc.overlapCenter.lat, lng: activeLoc.overlapCenter.lng, radius: activeLoc.overlapCenter.radius, color: '#B8A9C9' },
+  ];
+
   return (
     <section id="overlap-engine" className="relative py-32 px-6" ref={ref}>
       <div className="absolute inset-0 pointer-events-none">
@@ -205,28 +139,48 @@ export default function SerendipityWindowsSection() {
         </motion.div>
 
         <div className="grid lg:grid-cols-2 gap-8">
-          {/* Left: Near-miss visualization */}
+          {/* Left: Map with near-miss paths */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={isInView ? { opacity: 1, x: 0 } : {}}
             transition={{ duration: 0.6, delay: 0.2 }}
-            className="glass rounded-2xl p-6 relative overflow-hidden"
+            className="glass rounded-2xl overflow-hidden"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Navigation className="w-4 h-4 text-[#B8A9C9]" />
-              <span className="text-xs text-muted-foreground/60">
-                Near-miss analysis — live
-              </span>
+            <div className="p-4 border-b border-[#2A2A3A]/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Navigation className="w-4 h-4 text-[#B8A9C9]" />
+                <span className="text-xs text-muted-foreground/60">
+                  Near-miss analysis — live
+                </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#D4A574]" />
+                  <span className="text-[10px] text-muted-foreground/40">You</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#7CB9A8]" />
+                  <span className="text-[10px] text-muted-foreground/40">Them</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-2 h-2 rounded-full bg-[#B8A9C9]/50" />
+                  <span className="text-[10px] text-muted-foreground/40">Overlap zone</span>
+                </div>
+              </div>
             </div>
-            <div className="relative h-64 sm:h-72">
-              <canvas
-                ref={canvasRef}
+            <div className="relative h-72 sm:h-80">
+              <MapCanvas
+                key={activeWindow}
+                center={[activeLoc.lat, activeLoc.lng]}
+                zoom={16}
+                points={mapPoints}
+                paths={mapPaths}
+                showOverlap={overlapZones}
                 className="w-full h-full"
-                style={{ width: '100%', height: '100%' }}
               />
             </div>
-            <p className="text-xs text-muted-foreground/40 mt-4 text-center">
-              Two paths that nearly crossed — the gap is closing
+            <p className="text-xs text-muted-foreground/40 p-4 pt-2 text-center">
+              {windows[activeWindow].nearMisses} near-misses detected &middot; gap closing
             </p>
           </motion.div>
 
