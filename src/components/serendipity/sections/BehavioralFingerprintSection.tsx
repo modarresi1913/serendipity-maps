@@ -60,14 +60,19 @@ export default function BehavioralFingerprintSection() {
       setLearningProgress((prev) => {
         if (prev >= 100) {
           clearInterval(timer);
-          setPatternLearned(true);
           return 100;
         }
         return prev + 2;
       });
     }, 50);
     return () => clearInterval(timer);
-  }, [isInView, patternLearned, setPatternLearned]);
+  }, [isInView, patternLearned]);
+
+  useEffect(() => {
+    if (learningProgress >= 100 && !patternLearned) {
+      setPatternLearned(true);
+    }
+  }, [learningProgress, patternLearned, setPatternLearned]);
 
   // Calculate aggregate stats
   const avgEnergy = Math.round(
