@@ -1,0 +1,96 @@
+# Serendipity Maps
+
+> Serendipity Maps is a location-based friendship platform that engineers serendipity instead of intentional matching. No profiles, no swiping. AI learns your spatial patterns, orchestrates real-world overlaps, and reveals connections after you naturally cross paths.
+
+## What is Serendipity Maps?
+
+Serendipity Maps is an open-source web application built with Next.js 16, TypeScript, and Tailwind CSS 4. It demonstrates a new paradigm for human connection: instead of matching people based on declared preferences (like dating apps), it uses AI to learn behavioral fingerprints from movement patterns and timing habits, then engineers real-world coincidences between compatible people.
+
+The core philosophy: the best friendships start with coincidence, not choice.
+
+## Key Features
+
+1. **Behavioral Fingerprinting** — AI passively learns spatial patterns, timing rhythms, energy cycles, and vibe preferences. All processing happens on-device. No raw data leaves the phone.
+
+2. **Overlap Engine** — Calculates "serendipity windows" in real-time. These are moments when two behaviorally compatible people are about to share the same physical space. The engine uses pattern matching, not profile matching.
+
+3. **Ambient Signal** — Subtle proximity notifications that feel like intuition. A screen glow. A distance hint. Not a push notification. The design principle is "invisibility by default."
+
+4. **Serendipity Card** — After a natural in-person encounter, a card reveals the coincidence: a percentage score, shared behavioral patterns, and how many times you nearly crossed paths before.
+
+5. **Privacy Controls** — Ghost mode (full invisibility), invisible zones (workplace, therapist office), selective visibility (share timing but not location), on-device processing, and differential privacy guarantees.
+
+## Technical Stack
+
+- **Frontend Framework:** Next.js 16 with App Router
+- **Language:** TypeScript 5 (strict mode)
+- **Styling:** Tailwind CSS 4 with custom glassmorphism design system
+- **Animation:** Framer Motion 12 + 12+ custom CSS keyframe animations (float, pulse-glow, drift, path-draw, shimmer, encounter-pulse, breathe, card-reveal, star-twinkle)
+- **State Management:** Zustand 5
+- **Maps:** Leaflet 1.9 with OpenStreetMap tiles
+- **UI Components:** Radix UI primitives via shadcn/ui
+- **Database:** Prisma ORM with SQLite
+- **Theme:** Dark ethereal with 5-color palette (Amber #D4A574, Aurora #B8A9C9, Teal #7CB9A8, Blue #8FB8DE, Rose #C9A9B8)
+- **Typography:** Geist Sans + Geist Mono
+
+## How It Works (Step by Step)
+
+1. The app passively observes your movement patterns over time (coffee shops you visit, trails you walk, libraries you frequent, and when you go to each).
+2. It builds a behavioral fingerprint: spatial patterns, timing habits, energy levels (morning person vs night owl), and vibe preferences (quiet bookstores vs busy parks).
+3. The overlap engine compares anonymous, differentially-private signals from multiple users.
+4. When two compatible people are about to be in the same place at the same time, a serendipity window opens.
+5. An ambient signal is sent to both users — a subtle, non-intrusive hint.
+6. Users may or may not notice each other naturally. The system never forces interaction.
+7. If paths cross, a Serendipity Card is generated after the fact, showing what they share.
+
+## How It Differs from Traditional Social Apps
+
+- **Tinder/Bumble:** Swipe-based, profile-driven, dating-focused, high decision fatigue
+- **Meetup/Eventbrite:** Event listings, schedule-first, requires planning
+- **Bumble BFF:** Still swipe-based for friendship, chat-first
+- **Serendipity Maps:** No swiping, no profiles, no chat before meeting, meet-first, card-later, near-zero friction
+
+## Design Principles
+
+1. **Zero-Choice Interface** — The user never picks, swipes, or selects. Connection emerges from spatial coincidence.
+2. **Invisibility by Default** — No feed, no inbox, no dashboard. The product should feel like it's not there.
+3. **Post-Hoc Revelation** — Compatibility information is revealed after an encounter, not before. Prevents confirmation bias.
+4. **Graceful Decay** — Every nudge expires naturally. The system suggests, then steps back.
+
+## Privacy Architecture
+
+- All behavioral fingerprinting runs on-device
+- Raw location data never leaves the device
+- Only differentially-private noisy signals are transmitted
+- Epsilon threshold: controlled to prevent de-anonymization
+- Ghost mode allows full invisibility from all calculations
+- Invisible zones block detection at specific locations (workplace, home, medical)
+- No public profiles exist
+- No server-side storage of sensitive personal data
+
+## Project Structure
+
+- `src/app/page.tsx` — Main page composing 11 interactive sections
+- `src/app/globals.css` — Custom dark theme, glassmorphism utilities, 12+ keyframe animations
+- `src/components/serendipity/` — All application components
+- `src/components/serendipity/PathCanvas.tsx` — Hero canvas with animated Bezier path crossings
+- `src/components/serendipity/MapCanvas.tsx` — Interactive Leaflet map with proximity visualization
+- `src/components/serendipity/sections/` — 11 page sections (Hero, HowItWorks, BehavioralFingerprint, SerendipityWindows, EncounterSignal, SerendipityCard, Philosophy, TemporalLayers, Privacy, ExitVelocity, Metrics, Footer)
+- `src/store/useAppStore.ts` — Zustand global state management
+- `prisma/schema.prisma` — Database schema
+
+## License
+
+MIT License. Free to use, modify, and distribute.
+
+## Repository
+
+https://github.com/modarresi1913/serendipity-maps
+
+## Author
+
+modarresi1913
+
+---
+
+> This file follows the llms.txt standard (https://llmstxt.org/) and is optimized for AI-powered search engines like Perplexity, ChatGPT Browse, Google AI Overviews, and similar tools.
